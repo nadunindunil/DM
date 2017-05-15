@@ -6,10 +6,9 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 
-def addPrevVal(data):
-    for i in range(0, len(data.columns.values.tolist())):
-        listData = data.columns.values.tolist()[i]
-        data[listData + '_prev'] = data[listData].shift(6)
+def addPrevVal(x,data,col_name):
+    data[col_name] = data[col_name].shift(x)
+    data.fillna(method='bfill', inplace=True)
 
     return data
 
@@ -17,6 +16,7 @@ def addPrevVal(data):
 def preprocess_data(data_path, labels_path=None):
     # load data and set index to city, year, weekofyear
     df = pd.read_csv(data_path, index_col=[0, 1, 2])
+
     # fill missing values
     df.fillna(method='ffill', inplace=True)
 
@@ -29,17 +29,28 @@ def preprocess_data(data_path, labels_path=None):
     sj = df.loc['sj']
     iq = df.loc['iq']
 
-    sj = addPrevVal(sj)
-    # iq = addPrevVal(iq)
+    sj_need = {'station_avg_temp_c' : 9 , 
+                 'station_min_temp_c' : 9, 
+                 'station_max_temp_c' : 8, 
+                 'reanalysis_min_air_temp_k' : 8}
+
+    iq_need = {'reanalysis_specific_humidity_g_per_kg' : 0, 
+                 'station_min_temp_c': 1, 
+                 'reanalysis_min_air_temp_k' : 0, 
+                 'reanalysis_dew_point_temp_k' : 0}
+
+    for y in range(0,4):
+        sj = addPrevVal(sj_need[sj_need.keys()[y]],sj,sj_need.keys()[y])
+        iq = addPrevVal(iq_need[iq_need.keys()[y]],iq,iq_need.keys()[y])
 
     # select features we want
-    features_sj = ['reanalysis_specific_humidity_g_per_kg_prev', 
-                 'station_avg_temp_c_prev', 
-                 'reanalysis_dew_point_temp_k_prev', 
-                 'station_min_temp_c_prev']
+    features_sj = ['station_avg_temp_c', 
+                 'station_min_temp_c', 
+                 'station_max_temp_c', 
+                 'reanalysis_min_air_temp_k']
     features_iq = ['reanalysis_specific_humidity_g_per_kg', 
+                 'reanalysis_min_air_temp_k', 
                  'reanalysis_dew_point_temp_k', 
-                 'station_avg_temp_c', 
                  'station_min_temp_c']
     if labels_path:
         features_sj.append('total_cases')
@@ -75,16 +86,16 @@ def get_best_model(train, test, city):
 
     if city == 'sj':
         model_formula = "total_cases ~ 1 + " \
-                        "reanalysis_specific_humidity_g_per_kg_prev + " \
-                        "station_avg_temp_c_prev + " \
-                        "reanalysis_dew_point_temp_k_prev + " \
-                        "station_min_temp_c_prev"
+                        "station_avg_temp_c + " \
+                        "station_min_temp_c + " \
+                        "station_max_temp_c + " \
+                        "reanalysis_min_air_temp_k"
     if city == 'iq':
         model_formula = "total_cases ~ 1 + " \
                         "reanalysis_specific_humidity_g_per_kg + " \
+                        "reanalysis_min_air_temp_k + " \
                         "reanalysis_dew_point_temp_k + " \
-                        "station_min_temp_c + " \
-                        "station_avg_temp_c"
+                        "station_min_temp_c"
     
     grid = 10 ** np.arange(-8, -3, dtype=np.float64)
     best_alpha = []
@@ -150,6 +161,6 @@ submission = pd.read_csv("./data/submission_format.csv",
                          index_col=[0, 1, 2])
 
 submission.total_cases = np.concatenate([sj_predictions, iq_predictions])
-submission.to_csv("./data/benchmark_new2.csv")
+submission.to_csv("./data/benchmark_new3.csv")
 
 plt.show()

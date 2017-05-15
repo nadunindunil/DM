@@ -73,7 +73,7 @@ for y in (features.columns.values.tolist()):
     week_no_sj = 0
     week_no_iq = 0
 
-    for x in range(0, 20):
+    for x in range(0, 10):
         best_sj,best_iq = PCA_JOB(x , y)
 
         if best_sj > current_best_sj:
