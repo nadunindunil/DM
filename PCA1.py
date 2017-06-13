@@ -81,7 +81,3 @@ plt.title('Iquitos Variable Correlations')
      .sort_values(ascending=False)
      .plot
      .barh())
-
-plt.show()
-
-raw_input()

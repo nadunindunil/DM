@@ -1,12 +1,17 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
+import csv
 
 # PCA3 describe about the correlation of each feature 
 # with totall-cases in time of n given number of weeks
 
 features = pd.read_csv('./data/dengue_features_train.csv', index_col=[0,1,2])
 features.drop('week_start_date', axis=1, inplace=True)
+file = open('./output/pca3.csv','w')
+fieldnames = ['city', 'feature','best score', 'week']
+writer = csv.DictWriter(file, fieldnames=fieldnames, lineterminator = '\n')
+writer.writeheader()
 
 def PCA_JOB(x,col_name):
     train_features = pd.read_csv('./data/dengue_features_train.csv', index_col=[0,1,2])
@@ -73,7 +78,7 @@ for y in (features.columns.values.tolist()):
     week_no_sj = 0
     week_no_iq = 0
 
-    for x in range(0, 10):
+    for x in range(0, 11):
         best_sj,best_iq = PCA_JOB(x , y)
 
         if best_sj > current_best_sj:
@@ -87,3 +92,8 @@ for y in (features.columns.values.tolist()):
     print "in week : " + str(week_no_sj) 
     print "current best for iq " + str(y) + " : " + str(current_best_iq)
     print "in week : " + str(week_no_iq)
+    
+    writer.writerow({"city" : "sj" , "feature" : str(y), "best score" : current_best_sj, "week" : week_no_sj})
+    writer.writerow({"city" : "iq" , "feature" : str(y), "best score" : current_best_iq, "week" : week_no_iq})
+
+file.close()
