@@ -6,8 +6,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
-from sklearn.linear_model import LassoCV
+import sklearn.linear_model as linear_model
 from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_absolute_error 
@@ -95,8 +96,8 @@ sj_train, iq_train = preprocess_data('./data/dengue_features_train.csv',
                                     labels_path="./data/dengue_labels_train.csv")
 
 
-print sj_train.describe()
-print iq_train.describe()
+#print sj_train.describe()
+#print iq_train.describe()
 
 
 sj_train_subtrain = sj_train.head(800)
@@ -154,7 +155,11 @@ def get_best_model(train, city):
 #    plt.axhline(np.max(scores), linestyle='--', color='.5')
 #    plt.xlim([alphas[0], alphas[-1]])
     
-    model = Lasso(selection="random",random_state=2, alpha = 1e-8 )
+    #ridgereg = Ridge(alpha=1e-100, max_iter= 100000, solver="lsqr")
+    #fitted_model = ridgereg.fit(X,y)
+     
+    #model = linear_model.LogisticRegression(penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1, class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr', verbose=0, warm_start=False, n_jobs=1)
+    model = Lasso(selection="random", normalize=True, random_state=7, alpha = 1e-30 )
     fitted_model = model.fit(X,y)
     
     return fitted_model
@@ -185,7 +190,9 @@ iq_train.total_cases.plot(ax=axes[1], label="Actual")
 plt.suptitle("Dengue Predicted Cases vs. Actual Cases")
 plt.legend()
 
+print "SJ mae : ",
 print mean_absolute_error(sj_train['total_cases'], sj_train['fitted'])
+print "IQ mae : ",
 print mean_absolute_error(iq_train['total_cases'], iq_train['fitted'])
 
 sj_test, iq_test = preprocess_data('./data/dengue_features_test.csv')
@@ -204,7 +211,7 @@ submission = pd.read_csv("./data/submission_format.csv",
                          index_col=[0, 1, 2])
 
 submission.total_cases = np.concatenate([sj_predictions, iq_predictions])
-submission.to_csv("./data/lasso_2.csv")
+submission.to_csv("./data/lasso_2iq.csv")
 
 plt.show()
 
