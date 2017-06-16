@@ -8,7 +8,7 @@ import csv
 
 features = pd.read_csv('./data/dengue_features_train.csv', index_col=[0,1,2])
 features.drop('week_start_date', axis=1, inplace=True)
-file = open('./output/pca3.csv','w')
+file = open('./output/pca3_new.csv','w')
 fieldnames = ['city', 'feature','best score', 'week']
 writer = csv.DictWriter(file, fieldnames=fieldnames, lineterminator = '\n')
 writer.writeheader()
